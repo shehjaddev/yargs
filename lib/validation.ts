@@ -349,12 +349,22 @@ export function validation(
 
   self.implications = function implications(argv) {
     const implyFail: string[] = [];
+    const options = yargs.getOptions();
 
     Object.keys(implied).forEach(key => {
       const origKey = key;
       (implied[key] || []).forEach(value => {
-        let key = origKey;
         const origValue = value;
+        // Hidden options are internal and must not be surfaced in
+        // user-facing validation errors (see #2540).
+        if (
+          options.hiddenOptions.includes(origKey) ||
+          (typeof origValue === 'string' &&
+            options.hiddenOptions.includes(origValue))
+        ) {
+          return;
+        }
+        let key = origKey;
         key = keyExists(argv, key);
         value = keyExists(argv, value);
 

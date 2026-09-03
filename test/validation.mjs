@@ -262,6 +262,21 @@ describe('validation tests', () => {
         })
         .parse();
     });
+    it('does not surface hidden options in implications error (#2540)', done => {
+      let leaked = false;
+      yargs(['--remote-debugging-port', '9222'])
+        .option('hidden-debug', {type: 'boolean', hidden: true})
+        .option('remote-debugging-port', {hidden: true})
+        .implies('remote-debugging-port', 'hidden-debug')
+        .fail(msg => {
+          if (/hidden-debug|remote-debugging-port/.test(msg)) leaked = true;
+        })
+        .parse();
+      // The implication involves only hidden options, so no user-facing
+      // error should be raised and the hidden names must not leak.
+      expect(leaked).to.equal(false);
+      done();
+    });
   });
 
   describe('conflicts', () => {
